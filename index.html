@@ -3,214 +3,511 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Dumpling Calculator</title>
+        <title>Kitchen Calculators</title>
         <style>
+            :root {
+                --max-width: 900px;
+                --card-radius: 12px;
+                --gap: 16px;
+            }
             body {
-                font-family: Arial, sans-serif;
-                max-width: 600px;
-                margin: 40px auto;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                    Roboto, Arial, sans-serif;
+                background: #f5f5f5;
+                margin: 0;
+                padding: 32px;
+                display: flex;
+                justify-content: center;
+            }
+            .app {
+                width: 100%;
+                max-width: var(--max-width);
+            }
+            .tabs {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 18px;
+            }
+            .tab-btn {
+                padding: 10px 14px;
+                background: white;
+                border-radius: 10px;
+                cursor: pointer;
+                border: 1px solid #e6e6e6;
+                font-weight: 600;
+            }
+            .tab-btn.active {
+                background: linear-gradient(90deg, #ffd89b, #19547b);
+                color: white;
+                border-color: transparent;
+            }
+            .card {
+                background: white;
+                border-radius: var(--card-radius);
                 padding: 20px;
-                background-color: #f5f5f5;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
             }
-            .calculator {
-                background-color: white;
-                padding: 30px;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            .tab-panel {
+                display: none;
             }
-            .input-group {
-                margin-bottom: 20px;
+            .tab-panel.active {
+                display: block;
+            }
+
+            /* Shared form styles */
+            .field {
+                margin-bottom: 14px;
+            }
+            /* Scoped form labels: only labels that are direct children of .field */
+            .field > label {
+                display: block;
+                margin-bottom: 6px;
+                font-weight: 600;
+            }
+
+            /* Radio group: group label stays block, option labels inline next to inputs */
+            .radio-group > label {
+                display: block;
+                margin-bottom: 6px;
+                font-weight: 600;
+            }
+            .radio-group .row > div {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-right: 12px;
+            }
+            .radio-group .row label {
+                display: inline;
+                margin: 0;
+                font-weight: 600;
             }
             input[type="number"] {
-                padding: 8px;
-                font-size: 16px;
-                width: 100px;
+                padding: 8px 10px;
+                border-radius: 6px;
                 border: 1px solid #ddd;
-                border-radius: 4px;
+                width: 140px;
             }
-            label {
-                display: block;
-                margin-bottom: 8px;
-                font-weight: bold;
+
+            /* Small utilities */
+            .row {
+                display: flex;
+                gap: 12px;
+                align-items: center;
             }
-            .radio-group {
-                margin-bottom: 20px;
+            .muted {
+                color: #666;
             }
-            .radio-option {
-                margin-bottom: 8px;
+
+            /* Crab salad specific */
+            .crab .container {
+                background: white;
             }
-            .radio-option label {
-                font-weight: normal;
-                display: inline;
-                margin-left: 8px;
+            .crab .total {
+                background: transparent;
+                color: inherit;
+                border: 1px solid #eee;
+                padding: 14px;
+                border-radius: 8px;
+            }
+
+            /* Olivier specific */
+            .oliv .container {
+                background: white;
+            }
+            .oliv .total {
+                background: transparent;
+                color: inherit;
+                border: 1px solid #eee;
+                padding: 14px;
+                border-radius: 8px;
+            }
+
+            /* Dumplings specific: keep calculator layout simple; frame the results box below */
+            .dumpling .calculator {
+                background: transparent;
+                padding: 0;
             }
             #result {
-                margin-top: 20px;
-                padding: 15px;
-                background-color: #f8f9fa;
-                border-radius: 4px;
-                line-height: 1.5;
+                margin-top: 12px;
+                padding: 12px;
+                background: #f8f9fa;
+                border-radius: 6px;
             }
-            #result ul {
-                margin: 0;
-                padding-left: 20px;
-            }
-            #result li {
-                margin-bottom: 8px;
-            }
-            #result ul ul {
-                margin-top: 8px;
+
+            /* For dumpling panel, present the calculation results in a neutral framed box */
+            .dumpling #result {
+                background: transparent;
+                border: 1px solid #eee;
+                padding: 14px;
+                border-radius: 8px;
             }
         </style>
     </head>
     <body>
-        <div class="calculator">
-            <div class="radio-group">
-                <label>Dumpling type:</label>
-                <div class="radio-option">
-                    <input
-                        type="radio"
-                        id="pelmeni"
-                        name="dumplingType"
-                        value="pelmeni"
-                        checked
-                    />
-                    <label for="pelmeni">Pelmeni</label>
-                </div>
-                <div class="radio-option">
-                    <input
-                        type="radio"
-                        id="khinkali"
-                        name="dumplingType"
-                        value="khinkali"
-                    />
-                    <label for="khinkali">Khinkali</label>
+        <div class="app">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="dumpling">
+                    Dumplings
+                </button>
+                <button class="tab-btn" data-tab="crab">Surimi Salad</button>
+                <button class="tab-btn" data-tab="oliv">Olivier</button>
+            </div>
+
+            <div class="card tab-panel active dumpling" id="panel-dumpling">
+                <h2>🥟 Dumplings</h2>
+                <div class="calculator">
+                    <div class="radio-group field">
+                        <label>Dumpling type:</label>
+                        <div class="row">
+                            <div>
+                                <input
+                                    type="radio"
+                                    id="pelmeni"
+                                    name="dumplingType"
+                                    value="pelmeni"
+                                    checked
+                                />
+                                <label for="pelmeni">Pelmeni</label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    id="khinkali"
+                                    name="dumplingType"
+                                    value="khinkali"
+                                />
+                                <label for="khinkali">Khinkali</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="dumplingCount">Number of dumplings:</label>
+                        <input
+                            type="number"
+                            id="dumplingCount"
+                            min="1"
+                            step="1"
+                        />
+                    </div>
+                    <div id="result"></div>
                 </div>
             </div>
-            <div class="input-group">
-                <label for="dumplingCount">Number of dumplings:</label>
-                <input type="number" id="dumplingCount" min="1" step="1" />
+
+            <div class="card tab-panel crab" id="panel-crab">
+                <h2>🦀 Surimi Salad</h2>
+                <p class="muted">
+                    Enter the weight of any ingredient — others will be
+                    calculated automatically
+                </p>
+                <div class="container">
+                    <div class="field">
+                        <label for="crab-surimi">Surimi (g)</label>
+                        <input
+                            type="number"
+                            id="crab-surimi"
+                            placeholder="250"
+                        />
+                    </div>
+                    <div class="field">
+                        <label for="crab-eggs">Eggs (g)</label>
+                        <input type="number" id="crab-eggs" placeholder="180" />
+                    </div>
+                    <div class="field">
+                        <label for="crab-carrots">Carrot (g)</label>
+                        <input
+                            type="number"
+                            id="crab-carrots"
+                            placeholder="100"
+                        />
+                    </div>
+                    <div class="field">
+                        <label for="crab-corn">Canned corn (g)</label>
+                        <input type="number" id="crab-corn" placeholder="200" />
+                    </div>
+
+                    <div class="total-section">
+                        <div class="total" id="crab-total">
+                            <div class="total-label">Total weight:</div>
+                            <div class="total-value" id="crab-totalWeight">
+                                0 g
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div id="result"></div>
+
+            <div class="card tab-panel oliv" id="panel-oliv">
+                <h2>🥗 Olivier Salad</h2>
+                <p class="muted">
+                    Enter the weight of any ingredient — others will be
+                    calculated automatically
+                </p>
+                <div class="container">
+                    <div class="field">
+                        <label for="oliv-meat">Meat (g)</label>
+                        <input type="number" id="oliv-meat" placeholder="300" />
+                    </div>
+                    <div class="field">
+                        <label for="oliv-eggs">Eggs (g)</label>
+                        <input type="number" id="oliv-eggs" placeholder="180" />
+                    </div>
+                    <div class="field">
+                        <label for="oliv-potatoes">Potatoes (g)</label>
+                        <input
+                            type="number"
+                            id="oliv-potatoes"
+                            placeholder="400"
+                        />
+                    </div>
+                    <div class="field">
+                        <label for="oliv-carrots">Carrot (g)</label>
+                        <input
+                            type="number"
+                            id="oliv-carrots"
+                            placeholder="150"
+                        />
+                    </div>
+                    <div class="field">
+                        <label for="oliv-cucumbers"
+                            >Pickled cucumbers (g)</label
+                        >
+                        <input
+                            type="number"
+                            id="oliv-cucumbers"
+                            placeholder="250"
+                        />
+                    </div>
+                    <div class="field">
+                        <label for="oliv-peas">Peas (g)</label>
+                        <input type="number" id="oliv-peas" placeholder="200" />
+                    </div>
+
+                    <div class="total-section">
+                        <div class="total" id="oliv-total">
+                            <div class="total-label">Total weight:</div>
+                            <div class="total-value" id="oliv-totalWeight">
+                                0 g
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <script>
-            // Constants for Pelmeni (32 dumplings)
-            const PELMENI = {
-                BASE_COUNT: 32,
-                BASE_MEAT: 250, // grams
-                BASE_DOUGH: 279, // grams
-                FLOUR_RATIO: 2.31, // parts flour to 1 part water
-            };
-
-            // Constants for Khinkali (28 dumplings)
-            const KHINKALI = {
-                BASE_COUNT: 28,
-                BASE_MEAT: 336, // grams
-                BASE_BUTTER: 53, // grams
-                BASE_WATER_FILLING: 151, // grams
-                BASE_CILANTRO: 7, // grams
-                BASE_SALT: 4, // grams
-                BASE_DOUGH: 648, // grams
-                FLOUR_RATIO: 2.31, // parts flour to 1 part water
-            };
-
-            function calculatePelmeniIngredients(numDumplings) {
-                const ratio = numDumplings / PELMENI.BASE_COUNT;
-                const doughNeeded = PELMENI.BASE_DOUGH * ratio;
-                const totalParts = PELMENI.FLOUR_RATIO + 1;
-                const waterNeeded = doughNeeded / totalParts;
-                const flourNeeded = waterNeeded * PELMENI.FLOUR_RATIO;
-
-                return {
-                    meat: Math.round(PELMENI.BASE_MEAT * ratio),
-                    flour: Math.round(flourNeeded),
-                    water: Math.round(waterNeeded),
-                };
-            }
-
-            function calculateKhinkaliIngredients(numDumplings) {
-                const ratio = numDumplings / KHINKALI.BASE_COUNT;
-                const doughNeeded = KHINKALI.BASE_DOUGH * ratio;
-                const totalParts = KHINKALI.FLOUR_RATIO + 1;
-                const waterDough = doughNeeded / totalParts;
-                const flourNeeded = waterDough * KHINKALI.FLOUR_RATIO;
-
-                return {
-                    meat: Math.round(KHINKALI.BASE_MEAT * ratio),
-                    butter: Math.round(KHINKALI.BASE_BUTTER * ratio),
-                    waterFilling: Math.round(
-                        KHINKALI.BASE_WATER_FILLING * ratio
-                    ),
-                    cilantro: Math.round(KHINKALI.BASE_CILANTRO * ratio),
-                    salt: Math.round(KHINKALI.BASE_SALT * ratio),
-                    flour: Math.round(flourNeeded),
-                    waterDough: Math.round(waterDough),
-                };
-            }
-
-            function updateResults() {
-                const dumplingCount = parseInt(
-                    document.getElementById("dumplingCount").value
-                );
-                const dumplingType = document.querySelector(
-                    'input[name="dumplingType"]:checked'
-                ).value;
-                const resultDiv = document.getElementById("result");
-
-                if (dumplingCount && dumplingCount > 0) {
-                    let html = "<ul>";
-
-                    if (dumplingType === "pelmeni") {
-                        const ingredients =
-                            calculatePelmeniIngredients(dumplingCount);
-                        html += `
-                        <li>filling: ${ingredients.meat} grams of meat (with onion)</li>
-                        <li>dough:
-                            <ul>
-                                <li>${ingredients.flour} grams of flour</li>
-                                <li>${ingredients.water} grams of water</li>
-                            </ul>
-                        </li>
-                    `;
-                    } else {
-                        const ingredients =
-                            calculateKhinkaliIngredients(dumplingCount);
-                        html += `
-                        <li>filling:
-                            <ul>
-                                <li>${ingredients.meat} grams of meat</li>
-                                <li>${ingredients.butter} grams of butter</li>
-                                <li>${ingredients.waterFilling} grams of water</li>
-                                <li>${ingredients.cilantro} grams of cilantro</li>
-                                <li>${ingredients.salt} grams of salt</li>
-                            </ul>
-                        </li>
-                        <li>dough:
-                            <ul>
-                                <li>${ingredients.flour} grams of flour</li>
-                                <li>${ingredients.waterDough} grams of water</li>
-                            </ul>
-                        </li>
-                    `;
-                    }
-
-                    html += "</ul>";
-                    resultDiv.innerHTML = html;
-                } else {
-                    resultDiv.innerHTML = "";
-                }
-            }
-
-            // Add event listeners for input changes and radio button changes
-            document
-                .getElementById("dumplingCount")
-                .addEventListener("input", updateResults);
-            document
-                .querySelectorAll('input[name="dumplingType"]')
-                .forEach((radio) => {
-                    radio.addEventListener("change", updateResults);
+            // Tab switching
+            document.querySelectorAll(".tab-btn").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    document
+                        .querySelectorAll(".tab-btn")
+                        .forEach((b) => b.classList.remove("active"));
+                    document
+                        .querySelectorAll(".tab-panel")
+                        .forEach((p) => p.classList.remove("active"));
+                    btn.classList.add("active");
+                    const tab = btn.dataset.tab;
+                    document
+                        .getElementById("panel-" + tab)
+                        .classList.add("active");
                 });
+            });
+
+            // ----- Dumpling calculator (original logic) -----
+            (function () {
+                const PELMENI = {
+                    BASE_COUNT: 32,
+                    BASE_MEAT: 250,
+                    BASE_DOUGH: 279,
+                    FLOUR_RATIO: 2.31,
+                };
+                const KHINKALI = {
+                    BASE_COUNT: 28,
+                    BASE_MEAT: 336,
+                    BASE_BUTTER: 53,
+                    BASE_WATER_FILLING: 151,
+                    BASE_CILANTRO: 7,
+                    BASE_SALT: 4,
+                    BASE_DOUGH: 648,
+                    FLOUR_RATIO: 2.31,
+                };
+
+                function calculatePelmeniIngredients(numDumplings) {
+                    const ratio = numDumplings / PELMENI.BASE_COUNT;
+                    const doughNeeded = PELMENI.BASE_DOUGH * ratio;
+                    const totalParts = PELMENI.FLOUR_RATIO + 1;
+                    const waterNeeded = doughNeeded / totalParts;
+                    const flourNeeded = waterNeeded * PELMENI.FLOUR_RATIO;
+                    return {
+                        meat: Math.round(PELMENI.BASE_MEAT * ratio),
+                        flour: Math.round(flourNeeded),
+                        water: Math.round(waterNeeded),
+                    };
+                }
+
+                function calculateKhinkaliIngredients(numDumplings) {
+                    const ratio = numDumplings / KHINKALI.BASE_COUNT;
+                    const doughNeeded = KHINKALI.BASE_DOUGH * ratio;
+                    const totalParts = KHINKALI.FLOUR_RATIO + 1;
+                    const waterDough = doughNeeded / totalParts;
+                    const flourNeeded = waterDough * KHINKALI.FLOUR_RATIO;
+                    return {
+                        meat: Math.round(KHINKALI.BASE_MEAT * ratio),
+                        butter: Math.round(KHINKALI.BASE_BUTTER * ratio),
+                        waterFilling: Math.round(
+                            KHINKALI.BASE_WATER_FILLING * ratio
+                        ),
+                        cilantro: Math.round(KHINKALI.BASE_CILANTRO * ratio),
+                        salt: Math.round(KHINKALI.BASE_SALT * ratio),
+                        flour: Math.round(flourNeeded),
+                        waterDough: Math.round(waterDough),
+                    };
+                }
+
+                function updateResults() {
+                    const dumplingCount = parseInt(
+                        document.getElementById("dumplingCount").value
+                    );
+                    const dumplingType = document.querySelector(
+                        'input[name="dumplingType"]:checked'
+                    ).value;
+                    const resultDiv = document.getElementById("result");
+
+                    if (dumplingCount && dumplingCount > 0) {
+                        let html = "<ul>";
+                        if (dumplingType === "pelmeni") {
+                            const ingredients =
+                                calculatePelmeniIngredients(dumplingCount);
+                            html += `<li>filling: ${ingredients.meat} grams of meat (with onion)</li><li>dough:<ul><li>${ingredients.flour} grams of flour</li><li>${ingredients.water} grams of water</li></ul></li>`;
+                        } else {
+                            const ingredients =
+                                calculateKhinkaliIngredients(dumplingCount);
+                            html += `<li>filling:<ul><li>${ingredients.meat} grams of meat</li><li>${ingredients.butter} grams of butter</li><li>${ingredients.waterFilling} grams of water</li><li>${ingredients.cilantro} grams of cilantro</li><li>${ingredients.salt} grams of salt</li></ul></li><li>dough:<ul><li>${ingredients.flour} grams of flour</li><li>${ingredients.waterDough} grams of water</li></ul></li>`;
+                        }
+                        html += "</ul>";
+                        resultDiv.innerHTML = html;
+                    } else {
+                        resultDiv.innerHTML = "";
+                    }
+                }
+
+                document
+                    .getElementById("dumplingCount")
+                    .addEventListener("input", updateResults);
+                document
+                    .querySelectorAll('input[name="dumplingType"]')
+                    .forEach((radio) =>
+                        radio.addEventListener("change", updateResults)
+                    );
+            })();
+
+            // ----- Surimi salad calculator (namespaced) -----
+            (function () {
+                const baseRecipeCrab = {
+                    surimi: 250,
+                    eggs: 180,
+                    carrots: 100,
+                    corn: 200,
+                };
+                const inputs = {
+                    surimi: document.getElementById("crab-surimi"),
+                    eggs: document.getElementById("crab-eggs"),
+                    carrots: document.getElementById("crab-carrots"),
+                    corn: document.getElementById("crab-corn"),
+                };
+                const totalWeight = document.getElementById("crab-totalWeight");
+                let isUpdating = false;
+
+                function calculateProportions(changedIngredient, value) {
+                    if (isUpdating || !value || value <= 0) return;
+                    isUpdating = true;
+                    const ratio = value / baseRecipeCrab[changedIngredient];
+                    for (let ingredient in inputs) {
+                        if (ingredient !== changedIngredient) {
+                            const calculatedValue = Math.round(
+                                baseRecipeCrab[ingredient] * ratio
+                            );
+                            inputs[ingredient].value = calculatedValue;
+                        }
+                    }
+                    updateTotal();
+                    isUpdating = false;
+                }
+
+                function updateTotal() {
+                    let total = 0;
+                    for (let ingredient in inputs) {
+                        const value = parseFloat(inputs[ingredient].value) || 0;
+                        total += value;
+                    }
+                    totalWeight.textContent = total.toFixed(0) + " g";
+                }
+
+                for (let ingredient in inputs) {
+                    inputs[ingredient].addEventListener("input", function () {
+                        const value = parseFloat(this.value);
+                        if (value > 0) calculateProportions(ingredient, value);
+                    });
+                }
+
+                updateTotal();
+            })();
+
+            // ----- Olivier calculator (namespaced) -----
+            (function () {
+                const baseRecipeOliv = {
+                    meat: 300,
+                    eggs: 180,
+                    potatoes: 400,
+                    carrots: 150,
+                    cucumbers: 250,
+                    peas: 200,
+                };
+                const inputs = {
+                    meat: document.getElementById("oliv-meat"),
+                    eggs: document.getElementById("oliv-eggs"),
+                    potatoes: document.getElementById("oliv-potatoes"),
+                    carrots: document.getElementById("oliv-carrots"),
+                    cucumbers: document.getElementById("oliv-cucumbers"),
+                    peas: document.getElementById("oliv-peas"),
+                };
+                const totalWeight = document.getElementById("oliv-totalWeight");
+                let isUpdating = false;
+
+                function calculateProportions(changedIngredient, value) {
+                    if (isUpdating || !value || value <= 0) return;
+                    isUpdating = true;
+                    const ratio = value / baseRecipeOliv[changedIngredient];
+                    for (let ingredient in inputs) {
+                        if (ingredient !== changedIngredient) {
+                            const calculatedValue = Math.round(
+                                baseRecipeOliv[ingredient] * ratio
+                            );
+                            inputs[ingredient].value = calculatedValue;
+                        }
+                    }
+                    updateTotal();
+                    isUpdating = false;
+                }
+
+                function updateTotal() {
+                    let total = 0;
+                    for (let ingredient in inputs) {
+                        const value = parseFloat(inputs[ingredient].value) || 0;
+                        total += value;
+                    }
+                    totalWeight.textContent = total.toFixed(0) + " g";
+                }
+
+                for (let ingredient in inputs) {
+                    inputs[ingredient].addEventListener("input", function () {
+                        const value = parseFloat(this.value);
+                        if (value > 0) calculateProportions(ingredient, value);
+                    });
+                }
+
+                updateTotal();
+            })();
         </script>
     </body>
 </html>
